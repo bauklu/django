@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import UserChangeForm, UserCreationForm
-from django.forms import forms, HiddenInput
+from django.forms import forms, HiddenInput, ModelForm
+
+from mainapp.models import ProductCategory, Product
 
 
 class AgeValidationMixin:
@@ -43,4 +45,25 @@ class AdminShopUserUpdateForm(UserChangeForm, AgeValidationMixin):
                 field.widget = HiddenInput()
 
 
+class AdminProductCategoryUpdateForm(ModelForm):
+    class Meta:
+        model = ProductCategory
+        fields = '__all__'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+
+
+class AdminProductUpdateForm(ModelForm):
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
+            if field_name == 'category':
+                field.widget = HiddenInput()

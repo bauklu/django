@@ -11,6 +11,6 @@ urlpatterns = [
     # re_path(r'category/(?P<category_pk>\d+)/', mainapp.category_items, name='category_items'),  # category_pk -> str
 
     path('product/<int:product_pk>/', mainapp.product_page, name='product_page'),
-
+    path('category/<int:category_pk>/<int:page_num>/', mainapp.category_items, name='category_items_pages'),
     path('contact/', mainapp.contact, name='contact'),
 ]

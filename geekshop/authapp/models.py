@@ -13,3 +13,8 @@ class ShopUser(AbstractUser):
 
     def basket_total_qty(self):
         return sum(map(lambda x: x.quantity, self.basket.all()))
+
+    def delete(self, using=None, keep_parents=False):
+        self.is_active = False
+        self.save()
+        return 1, {}
