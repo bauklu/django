@@ -1,4 +1,5 @@
 from django.contrib import auth
+from django.contrib.auth import get_user_model
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
@@ -33,10 +34,10 @@ def register(request):
     if request.method == 'POST':
         form = ShopUserRegisterForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse('main:index'))
-            # return HttpResponseRedirect(reverse('auth:greeting'))
-            # messages
+            user = form.save()
+            if user.send_verify_mail() == 0:
+                return HttpResponseRedirect(reverse('auth:register'))
+            return HttpResponseRedirect(reverse('main:index'))  # say ok
     else:
         form = ShopUserRegisterForm()
 
@@ -65,4 +66,10 @@ def update(request):
     return render(request, 'authapp/update.html', context)
 
 
-
+def verify(request, email, activation_key):
+    user = get_user_model().objects.get(email=email)
+    if user.activation_key == activation_key and not user.is_activation_key_expired():
+        user.is_active = True
+        user.save()
+        auth.login(request, user)
+    return render(request, 'authapp/verification.html')

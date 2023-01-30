@@ -6,9 +6,6 @@ from django.shortcuts import render, get_object_or_404
 from mainapp.models import ProductCategory, Product
 
 
-def get_catalog_menu():
-    return ProductCategory.objects.all()
-
 
 def get_hot_product():
     products = Product.objects.all()
@@ -23,7 +20,6 @@ def get_same_products(product):
 def index(request):
     context = {
         'page_title': 'главная',
-        'catalog_menu': get_catalog_menu(),
     }
     return render(request, 'mainapp/index.html', context)
 
@@ -35,7 +31,6 @@ def products(request):
         'page_title': 'каталог',
         'hot_product': hot_product,
         'same_products': get_same_products(hot_product),
-        'catalog_menu': get_catalog_menu(),
     }
     return render(request, 'mainapp/products.html', context)
 
@@ -52,11 +47,10 @@ def category_items(request, category_pk, page_num=1):
     except PageNotAnInteger:
         products = products_paginator.page(1)
     except EmptyPage:
-        products = products_paginator.num_pages
+        products = products_paginator.page(products_paginator.num_pages)
 
     context = {
         'page_title': 'каталог',
-        'catalog_menu': get_catalog_menu(),
         'products': products,
         'category_pk': category_pk,
     }
@@ -68,7 +62,6 @@ def product_page(request, product_pk):
 
     context = {
         'page_title': 'продукт',
-        'catalog_menu': get_catalog_menu(),
         'product': product,
         'category_pk': product.category_id,
     }
@@ -100,6 +93,5 @@ def contact(request):
     context = {
         'page_title': 'контакты',
         'locations': _locations,
-        'catalog_menu': get_catalog_menu(),
     }
     return render(request, 'mainapp/contact.html', context)

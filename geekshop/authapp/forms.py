@@ -1,4 +1,7 @@
-from django.contrib.auth.forms import AuthenticationForm, UserCreationForm,UserChangeForm
+import hashlib
+import random
+
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm, UserChangeForm
 from django.forms import forms
 from django.forms.widgets import HiddenInput
 
@@ -29,6 +32,15 @@ class ShopUserRegisterForm(UserCreationForm):
         if age and age < 18:
             raise forms.ValidationError('Вы слишком молоды!')
         return age
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.is_active = False
+        salt = hashlib.sha1(str(random.random()).encode('utf8')).hexdigest()[:6]
+        user.activation_key = hashlib.sha1((user.email + salt).encode('utf8')).hexdigest()
+        user.save()
+
+        return user
 
 
 class ShopUserUpdateForm(UserChangeForm):
