@@ -1,10 +1,14 @@
 from django.contrib import auth
 from django.contrib.auth import get_user_model
+from django.db import transaction
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from authapp.forms import ShopUserLoginForm, ShopUserRegisterForm, ShopUserUpdateForm
+from authapp.forms import ShopUserLoginForm, ShopUserRegisterForm, ShopUserUpdateForm, ShopUserProfileUpdateForm
+from authapp.models import ShopUserProfile
 
 
 def login(request):
@@ -48,20 +52,25 @@ def register(request):
     return render(request, 'authapp/register.html', context)
 
 
+# @transaction.atomic
 def update(request):
     if request.method == 'POST':
         form = ShopUserUpdateForm(request.POST, request.FILES,
                                   instance=request.user)
-        if form.is_valid():
+        form_2 = ShopUserProfileUpdateForm(request.POST, request.FILES,
+                                  instance=request.user.shopuserprofile)
+        if form.is_valid() and form_2.is_valid():
             form.save()
+            # form_2.save()
             return HttpResponseRedirect(reverse('main:index'))
-            # return HttpResponseRedirect(reverse('auth:update'))
     else:
         form = ShopUserUpdateForm(instance=request.user)
+        form_2 = ShopUserProfileUpdateForm(instance=request.user.shopuserprofile)
 
     context = {
         'page_title': 'редактирование',
         'form': form,
+        'form_2': form_2,
     }
     return render(request, 'authapp/update.html', context)
 
@@ -71,5 +80,16 @@ def verify(request, email, activation_key):
     if user.activation_key == activation_key and not user.is_activation_key_expired():
         user.is_active = True
         user.save()
-        auth.login(request, user)
+        auth.login(request, user,
+                   backend='django.contrib.auth.backends.ModelBackend')
     return render(request, 'authapp/verification.html')
+
+
+@receiver(post_save, sender=get_user_model())
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        print('ShopUser created')
+        ShopUserProfile.objects.create(user=instance)
+    else:
+        print('ShopUser modified')
+        instance.shopuserprofile.save()
